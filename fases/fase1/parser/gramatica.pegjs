@@ -23,31 +23,63 @@ gramatica = _ producciones+ _ {
     }
 }
 
-producciones = _ id:identificador _ (literales)? _ "=" _ opciones (_";")? { ids.push(id) }
+producciones = _ id:identificador _ alias:(literales)? _ "=" _ expr:opciones (_";")? { 
+    ids.push(id) 
+    return new n.Rule(id, expr, alias);
+    }
 
-opciones = union (_ "/" _ union)*
+opciones = head:union tail:(_ "/" _ @union)* {
+    return new n.Choice([head, ...tail]);
+}
 
-union = expresion (_ expresion !(_ literales? _ "=") )*
+union = head:expresion tail:(_ @expresion !(_ literales? _ "=") )* {
+    return new n.Concatenation([head, ...tail]);
+}
 
-expresion  = (etiqueta/varios)? _ expresiones _ ([?+*]/conteo)?
+expresion  = etiqueta:(etiqueta/varios)? _ expr:expresiones _ mod:([?+*]/conteo)? {
+    return new n.Expression(expr, mod, etiqueta);
+}
 
-etiqueta = ("@")? _ id:identificador _ ":" (varios)?
+etiqueta = pluck:("@")? _ id:identificador _ ":" varios:(varios)? {
+    return new n.Label(id, pluck ? true : false, varios);
+}
 
 varios = ("!"/"$"/"@"/"&")
 
-expresiones  =  id:identificador { usos.push(id) }
-                / literales "i"?
-                / "(" _ opciones _ ")"
-                / corchetes "i"?
-                / "."
-                / "!."
+expresiones  =  id:identificador { 
+    usos.push(id);
+    return new n.Expression(id);
+    }
+                / lit:literales "i"? {
+                    return new n.Expression(lit)
+                }
+                / "(" _ opciones:opciones _ ")" {
+                    return new n.Expression(opciones)
+                }
+                / corchetes:corchetes "i"? {
+                    return new n.Expression(corchetes)
+                }
+                / "." {
+                    return new n.Expression(".")
+                }
+                / "!." {
+                    return new n.Expression("!.")
+                }
 
 // conteo = "|" parteconteo _ (_ delimitador )? _ "|"
 
-conteo = "|" _ (numero / id:identificador) _ "|"
-        / "|" _ (numero / id:identificador)? _ ".." _ (numero / id2:identificador)? _ "|"
-        / "|" _ (numero / id:identificador)? _ "," _ opciones _ "|"
-        / "|" _ (numero / id:identificador)? _ ".." _ (numero / id2:identificador)? _ "," _ opciones _ "|"
+conteo = "|" _ valor:(numero / id:identificador) _ "|" {
+            return new n.Quantifier(valor);
+}
+        / "|" _ valor1:(numero / id:identificador)? _ modo:".." _ valor2:(numero / id2:identificador)? _ "|" {
+            return new n.Quantifier(valor1,modo,valor2);
+        }
+        / "|" _ valor1:(numero / id:identificador)? _ modo:"," _ valor2:opciones _ "|" {
+            return new n.Quantifier(valor1,modo,valor2);
+        }
+        / "|" _ valor1:(numero / id:identificador)? _ modo:".." _ valor2:(numero / id2:identificador)? _ modo2:"," _ valor3:opciones _ "|" {
+            return new n.Quantifier(valor1,modo,valor2,modo2,valor3);
+        }
 
 // parteconteo = identificador
 //             / [0-9]? _ ".." _ [0-9]?
@@ -58,7 +90,8 @@ conteo = "|" _ (numero / id:identificador) _ "|"
 // Regla principal que analiza corchetes con contenido
 corchetes
     = "[" contenido:(rango / contenido)+ "]" {
-        return `Entrada válida: [${input}]`;
+        console.log(`Entrada válida: [${input}]`);
+        return new n.Corchetes(contenido);
     }
 
 // Regla para validar un rango como [A-Z]
