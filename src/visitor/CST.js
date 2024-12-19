@@ -50,6 +50,18 @@ export class Expresion extends Node {
     }
 }
     
+export class Corchetes extends Node {
+    constructor(contenido, isCase) {
+        super();
+        this.contenido = contenido;
+		this.isCase = isCase;
+    }
+
+    accept(visitor) {
+        return visitor.visitCorchetes(this);
+    }
+}
+    
 export class String extends Node {
     constructor(val, isCase) {
         super();

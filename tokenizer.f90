@@ -29,29 +29,15 @@ contains
         end if
 
         
-    if (to_lower("prueba") == to_lower(input(cursor:cursor + 5))) then !Foo
-        allocate(character(len=6) :: lexeme)
-        lexeme = input(cursor:cursor + 5)
-        cursor = cursor + 6
-        return
-    end if
-        
-
-    if ("123" == input(cursor:cursor + 2)) then !Foo
-        allocate(character(len=3) :: lexeme)
-        lexeme = input(cursor:cursor + 2)
-        cursor = cursor + 3
-        return
-    end if
-        
-
-    if ("hola" == input(cursor:cursor + 3)) then !Foo
-        allocate(character(len=4) :: lexeme)
-        lexeme = input(cursor:cursor + 3)
-        cursor = cursor + 4
-        return
-    end if
-        
+                if (input(cursor:cursor + 0) < "4" .or. input(cursor:cursor + 0) > "6") then
+                    print*, "Error: El carácter no está en el rango permitido."
+                    stop
+                end if
+                allocate(character(len=1) :: lexeme)
+                lexeme = input(cursor:cursor + 0)
+                cursor = cursor + 1
+                return
+                
 
         print *, "error lexico en col ", cursor, ', "'//input(cursor:cursor)//'"'
         allocate(character(len=5) :: lexeme)

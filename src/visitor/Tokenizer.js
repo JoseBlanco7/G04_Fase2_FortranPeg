@@ -62,6 +62,52 @@ end module tokenizer
         return node.expr.accept(this);
     }
 
+    visitCorchetes(node) {
+        console.log("Prueba");
+        console.log(node.isCase);
+        console.log(node);
+    
+        const rangeRegex = /^([a-zA-Z0-9])\-([a-zA-Z0-9])$/;
+    
+        const match = node.contenido.match(rangeRegex);
+    
+        if (match) {
+            const startChar = match[1];
+            const endChar = match[2];
+    
+            // Si es sensible a mayúsculas
+            if (node.isCase !== 'i') {
+                return `
+                if (input(cursor:cursor + 0) < "${startChar}" .or. input(cursor:cursor + 0) > "${endChar}") then
+                    print*, "Error: El carácter no está en el rango permitido."
+                    stop
+                end if
+                allocate(character(len=1) :: lexeme)
+                lexeme = input(cursor:cursor + 0)
+                cursor = cursor + 1
+                return
+                `;
+            } else {
+                // Si es insensible a mayúsculas
+                return `
+                if (to_lower(input(cursor:cursor + 0)) < to_lower("${startChar}") .or. to_lower(input(cursor:cursor + 0)) > to_lower("${endChar}")) then
+                    print*, "Error: El carácter no está en el rango permitido."
+                    stop
+                end if
+                allocate(character(len=1) :: lexeme)
+                lexeme = input(cursor:cursor + 0)
+                cursor = cursor + 1
+                return
+                `;
+            }
+        }
+    }
+    
+    
+    
+    
+
+
 visitString(node) {
     console.log("Prueba");
     console.log(node.isCase);

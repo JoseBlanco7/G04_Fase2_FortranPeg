@@ -56,10 +56,17 @@ expresiones
     usos.push(id)
   }
   / val:$literales isCase:"i"? {
-    return new n.String(val.replace(/['"]/g, ''), isCase);
+    return new n.String(val.replace(/['"]/g, ''), isCase );
   }
   / "(" _ opciones _ ")"
-  / corchetes "i"?
+
+  / contenido:corchetes isCase:"i"? {
+    console.log(contenido);
+    
+    return new n.Corchetes(contenido, isCase); 
+  }
+  
+
   / "."
   / "!."
 
@@ -78,23 +85,15 @@ conteo = "|" _ (numero / id:identificador) _ "|"
 
 // Regla principal que analiza corchetes con contenido
 corchetes
-    = "[" contenido:(rango / contenido)+ "]" {
-        return `Entrada válida: [${input}]`;
-    }
+    = "[" @$(rango / contenido)+ "]" 
 
 // Regla para validar un rango como [A-Z]
 rango
-    = inicio:caracter "-" fin:caracter {
-        if (inicio.charCodeAt(0) > fin.charCodeAt(0)) {
-            throw new Error(`Rango inválido: [${inicio}-${fin}]`);
-
-        }
-        return `${inicio}-${fin}`;
-    }
+    = @$(inicio:caracter "-" fin:caracter)  
 
 // Regla para caracteres individuales
 caracter
-    = [a-zA-Z0-9_ ] { return text()}
+    = @$[a-zA-Z0-9_ ] 
 
 // Coincide con cualquier contenido que no incluya "]"
 contenido
@@ -107,7 +106,7 @@ texto
     = [^\[\]]+
 
 literales
-  = '"' @stringDobleComilla* '"'
+  = '"' @stringDobleComilla* '"'  
   / "'" @stringSimpleComilla* "'"
 
 stringDobleComilla = !('"' / "\\" / finLinea) .

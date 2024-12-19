@@ -3,6 +3,7 @@ const nodes = {
     Opciones: ['exprs'],
     Union: ['exprs'],
     Expresion: ['expr', 'label', 'qty'],
+    Corchetes: ['contenido', 'isCase'],
     String: ['val', 'isCase'],
 };
 
