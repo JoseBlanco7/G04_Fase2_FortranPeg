@@ -63,7 +63,11 @@ end module tokenizer
     }
 
 visitString(node) {
-    if (node.isCase) {
+    console.log("Prueba");
+    console.log(node.isCase);
+    console.log(node);
+    if (node.isCase == 'i') {
+        console.log("Prueba2");
         // Comparación insensible a mayúsculas y minúsculas
         return `
     if (to_lower("${node.val}") == to_lower(input(cursor:cursor + ${node.val.length - 1}))) then !Foo

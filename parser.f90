@@ -3,15 +3,15 @@
 !gfortran -c tokenizer.f90
 !gfortran -o muestra parser.f90 tokenizer.f90
 
-!patata
-!= "contesta"i
-!/"pepito"'hola' "como" 'estas'
+! suma
+! = "prueba"i
+! / "123" 'hola'
 
 program parser
     use tokenizer
     implicit none
 
-    character(len=*), parameter :: input = "hoLapepitocoNtEstacomoestas"
+    character(len=*), parameter :: input = "123pruEbahoLa"
     integer :: cursor
     character(len=:), allocatable :: lexeme
 
