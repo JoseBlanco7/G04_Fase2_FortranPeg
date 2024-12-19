@@ -4,51 +4,86 @@ export default class Tokenizer extends Visitor {
     generateTokenizer(grammar) {
         return `
 module tokenizer
-implicit none
+    implicit none
 
 contains
-function nextSym(input, cursor) result(lexeme)
-    character(len=*), intent(in) :: input
-    integer, intent(inout) :: cursor
-    character(len=:), allocatable :: lexeme
 
-    if (cursor > len(input)) then
-        allocate( character(len=3) :: lexeme )
-        lexeme = "EOF"
-        return
-    end if
+    function to_lower(str) result(lower_str)
+        character(len=*), intent(in) :: str
+        character(len=len(str)) :: lower_str
+        integer :: i
 
-    ${grammar.map((produccion) => produccion.accept(this)).join('\n')}
+        lower_str = str
+        do i = 1, len(str)
+            if (iachar(str(i:i)) >= iachar('A') .and. iachar(str(i:i)) <= iachar('Z')) then
+                lower_str(i:i) = achar(iachar(str(i:i)) + 32)
+            end if
+        end do
+    end function to_lower
 
-    print *, "error lexico en col ", cursor, ', "'//input(cursor:cursor)//'"'
-    lexeme = "ERROR"
-end function nextSym
-end module tokenizer 
+    function nextSym(input, cursor) result(lexeme)
+        character(len=*), intent(in) :: input
+        integer, intent(inout) :: cursor
+        character(len=:), allocatable :: lexeme
+
+        if (cursor > len(input)) then
+            allocate(character(len=3) :: lexeme)
+            lexeme = "EOF"
+            return
+        end if
+
+        ${grammar.map((produccion) => produccion.accept(this)).join('\n')}
+
+        print *, "error lexico en col ", cursor, ', "'//input(cursor:cursor)//'"'
+        allocate(character(len=5) :: lexeme)
+        lexeme = "ERROR"
+        cursor = cursor + 1 ! Avanzar el cursor para evitar el bucle infinito
+    end function nextSym
+
+end module tokenizer
         `;
     }
 
     visitProducciones(node) {
         return node.expr.accept(this);
     }
+
     visitOpciones(node) {
-        return node.exprs[0].accept(this);
+        // Generar código para todas las opciones
+        return node.exprs.map(expr => expr.accept(this)).join('\n');
     }
+
     visitUnion(node) {
-        return node.exprs[0].accept(this);
+        // Generar código para todas las uniones
+        return node.exprs.map(expr => expr.accept(this)).join('\n');
     }
+
     visitExpresion(node) {
         return node.expr.accept(this);
     }
-    visitString(node) {
+
+visitString(node) {
+    if (node.isCase) {
+        // Comparación insensible a mayúsculas y minúsculas
         return `
-    if ("${node.val}" == input(cursor:cursor + ${
-            node.val.length - 1
-        })) then !Foo
-        allocate( character(len=${node.val.length}) :: lexeme)
+    if (to_lower("${node.val}") == to_lower(input(cursor:cursor + ${node.val.length - 1}))) then !Foo
+        allocate(character(len=${node.val.length}) :: lexeme)
         lexeme = input(cursor:cursor + ${node.val.length - 1})
         cursor = cursor + ${node.val.length}
         return
     end if
-    `;
+        `;
+    } else {
+        // Comparación sensible a mayúsculas y minúsculas
+        return `
+    if ("${node.val}" == input(cursor:cursor + ${node.val.length - 1})) then !Foo
+        allocate(character(len=${node.val.length}) :: lexeme)
+        lexeme = input(cursor:cursor + ${node.val.length - 1})
+        cursor = cursor + ${node.val.length}
+        return
+    end if
+        `;
     }
+}
+
 }

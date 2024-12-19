@@ -295,7 +295,7 @@ function peg$parse(input, options) {
     usos.push(id)
   };
   var peg$f6 = function(val, isCase) {
-    return new n.String(val.replace(/['"]/g, ''), isCase);
+    return new n.String(val.replace(/['"]/g, ''), isCase !==undefined);
   };
   var peg$f7 = function(contenido) {
         return `Entrada válida: [${input}]`;
