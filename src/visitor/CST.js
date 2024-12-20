@@ -62,3 +62,17 @@ export class String extends Node {
     }
 }
     
+export class Range extends Node {
+    constructor(init, end, isCase, quantifier) {
+        super();
+        this.init = init;
+		this.end = end;
+		this.isCase = isCase;
+		this.quantifier = quantifier;
+    }
+
+    accept(visitor) {
+        return visitor.visitRange(this);
+    }
+}
+    

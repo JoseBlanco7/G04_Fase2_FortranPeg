@@ -59,6 +59,7 @@ end module tokenizer
     }
 
     visitExpresion(node) {
+        
         return node.expr.accept(this);
     }
 
@@ -89,5 +90,22 @@ visitString(node) {
         `;
     }
 }
+
+    visitRange(node){
+        
+        console.log("Testing ranges "+node.init+" "+node.end);
+        console.log("");
+        let code =`
+        do j=0, ${node.quantifier}, 1
+            if(input(cursor:cursor) >= ${node.init} .and. input(cursor:cursor)<= ${node.end})
+                
+                lexeme = input(cursor:cursor) 
+                cursor = cursor + 1
+                return
+            end if
+        end do`
+        console.log(code);
+       return node.expr.accept(this);
+    }
 
 }

@@ -59,7 +59,15 @@ expresiones
     return new n.String(val.replace(/['"]/g, ''), isCase);
   }
   / "(" _ opciones _ ")"
-  / corchetes "i"?
+  / value:corchetes caseI:"i"? {
+                              if(
+                                 typeof value[0] === "object" && 
+                                 value[0].init !== undefined
+                                 ){
+                                  return new n.Range(value[0].init,value[0].end,caseI,1);
+                                }
+                                
+                            }
   / "."
   / "!."
 
@@ -79,7 +87,8 @@ conteo = "|" _ (numero / id:identificador) _ "|"
 // Regla principal que analiza corchetes con contenido
 corchetes
     = "[" contenido:(rango / contenido)+ "]" {
-        return `Entrada válida: [${input}]`;
+       // return `Entrada válida: [${input}]`;
+       return contenido;
     }
 
 // Regla para validar un rango como [A-Z]
@@ -89,7 +98,9 @@ rango
             throw new Error(`Rango inválido: [${inicio}-${fin}]`);
 
         }
-        return `${inicio}-${fin}`;
+        return { init:inicio,
+                 end : fin 
+              };
     }
 
 // Regla para caracteres individuales
@@ -98,10 +109,10 @@ caracter
 
 // Coincide con cualquier contenido que no incluya "]"
 contenido
-    = (corchete / texto)+
+    = (corchete / texto)+ 
 
 corchete
-    = "[" contenido "]"
+    = "[" contenido "]" 
 
 texto
     = [^\[\]]+

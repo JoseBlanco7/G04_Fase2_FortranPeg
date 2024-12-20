@@ -4,6 +4,7 @@ const nodes = {
     Union: ['exprs'],
     Expresion: ['expr', 'label', 'qty'],
     String: ['val', 'isCase'],
+    Range:['init','end','isCase','quantifier']
 };
 
 export default nodes;
