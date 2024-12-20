@@ -11,7 +11,7 @@ program parser
     use tokenizer
     implicit none
 
-    character(len=*), parameter :: input = "4"
+    character(len=*), parameter :: input = "a"
     integer :: cursor
     character(len=:), allocatable :: lexeme
 

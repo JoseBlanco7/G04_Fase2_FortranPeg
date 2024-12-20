@@ -50,18 +50,6 @@ export class Expresion extends Node {
     }
 }
     
-export class Corchetes extends Node {
-    constructor(contenido, isCase) {
-        super();
-        this.contenido = contenido;
-		this.isCase = isCase;
-    }
-
-    accept(visitor) {
-        return visitor.visitCorchetes(this);
-    }
-}
-    
 export class String extends Node {
     constructor(val, isCase) {
         super();
@@ -71,6 +59,30 @@ export class String extends Node {
 
     accept(visitor) {
         return visitor.visitString(this);
+    }
+}
+    
+export class Clase extends Node {
+    constructor(chars, isCase) {
+        super();
+        this.chars = chars;
+		this.isCase = isCase;
+    }
+
+    accept(visitor) {
+        return visitor.visitClase(this);
+    }
+}
+    
+export class Rango extends Node {
+    constructor(bottom, top) {
+        super();
+        this.bottom = bottom;
+		this.top = top;
+    }
+
+    accept(visitor) {
+        return visitor.visitRango(this);
     }
 }
     
