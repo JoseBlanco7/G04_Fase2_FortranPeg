@@ -74,13 +74,11 @@ end module tokenizer
         let total_nodos = node.exprs.length;
         let longitud = 0;
         let lexema_anterior = "";
-        // console.log(node.exprs.length);
         node.exprs.forEach(element => {
             const tabuladores = "\t".repeat(repeticiones);
             if (element.expr instanceof String){
                 // Case insensitive
                 if (element.expr.isCase == 'i') {
-                    console.log("entra")
                     if (repeticiones == 0){
                         fortran += `
     ${tabuladores}if (to_lower("${element.expr.val}") == to_lower(input(cursor:cursor + ${element.expr.val.length - 1}))) then 
@@ -156,7 +154,6 @@ ${tabuladores}end if`;
         let tabuladores = "\t".repeat(repeticiones);
                 fortran += `
 end if`;       
-        console.log(fortran);
         return fortran;
     }
     visitExpresion(node) {
