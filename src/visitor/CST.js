@@ -75,10 +75,9 @@ export class Clase extends Node {
 }
     
 export class Rango extends Node {
-    constructor(bottom, top) {
+    constructor(listOfRanges) {
         super();
-        this.bottom = bottom;
-		this.top = top;
+        this.listOfRanges = listOfRanges;
     }
 
     accept(visitor) {

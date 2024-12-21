@@ -101,7 +101,8 @@ end if
 }
 
 visitClase(node) {
-    return `
+    let result =
+     `
 i = cursor
 ${this.generateCaracteres(
     node.chars.filter((node) => typeof node === 'string')
@@ -111,16 +112,43 @@ ${node.chars
     .map((range) => range.accept(this))
     .join('\n')}
     `;
+
+    //console.log("*******************************");
+    //console.log(result);
+    return result;
 }
 
 visitRango(node) {
-    return `
-if (input(i:i) >= "${node.bottom}" .and. input(i:i) <= "${node.top}") then
+    
+    console.log("----Trabajando con rangos");
+    console.log(node.listOfRanges);
+
+    /*
+    do i = 1, len(str)
+            
+            if (iachar(str(i:i)) >= iachar('A') .and. iachar(str(i:i)) <= iachar('Z')) then
+                lower_str(i:i) = achar(iachar(str(i:i)) + 32)
+            end if
+
+    end do
+    */
+    /*
+    do while (i <= n )
+        suma = suma + i
+        i = i + 1
+        end do
+*/
+    let result = 
+    `
+if (input(i:i) >= 1 .and. input(i:i) <= 2) then
     lexeme = input(cursor:i)
     cursor = i + 1
     return
 end if
     `;
+    //console.log("------------------------");
+    //console.log(result);
+    return result;
 }
 }
 

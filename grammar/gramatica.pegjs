@@ -28,13 +28,29 @@ gramatica
 
 producciones
   = _ id:identificador _ alias:(literales)? _ "=" _ expr:opciones (_";")? {
+    
     ids.push(id);
     return new n.Producciones(id, expr, alias);
   }
 
 opciones
   = expr:union rest:(_ "/" _ @union)* {
-    return new n.Opciones([expr, ...rest]);
+     if((expr !== undefined && expr !== null) && (expr.exprs[0] !==undefined && expr.exprs[0] !== null)){
+        if(expr.exprs[0].expr instanceof n.Clase){
+          let ranges = expr.exprs.map(function(element){
+             return {
+                        init: element.expr.chars[1][0].bottom,
+                        end: element.expr.chars[1][0].top,
+                        isCase: element.expr.isCase,
+                        label: element.label,
+                        qty: element.qty
+                    }
+          });
+          return new n.Rango(ranges);
+        }
+     }
+     else
+        return new n.Opciones([expr, ...rest]);
   }
 
 union
@@ -60,7 +76,16 @@ expresiones
   }
 / "(" _ opciones _ ")"
   / chars:clase isCase:"i"? {
-    return new n.Clase(chars, isCase)
+
+    //console.log(chars);
+    if(chars !== undefined && chars !== null && Array.isArray(chars) && typeof chars[0] ==="object"){
+        //return new n.Rango(bottom, top);
+        return chars;
+    }
+    else {
+      return new n.Clase(chars, isCase)
+    }
+    
   }
   / "."
   / "!."
@@ -80,11 +105,15 @@ conteo = "|" _ (numero / id:identificador) _ "|"
 
 // Regla principal que analiza corchetes con contenido
 clase
-  = "[" @contenidoClase+ "]"
+  = "[" cc:contenidoClase+ "]"
 
 contenidoClase
   = bottom:$[^\[\]] "-" top:$[^\[\]] {
-    return new n.Rango(bottom, top);
+    return {
+        bottom: bottom,
+        top: top
+    }
+    //return new n.Rango(bottom, top);
   }
   / $[^\[\]]
   
