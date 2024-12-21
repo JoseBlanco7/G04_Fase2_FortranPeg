@@ -39,6 +39,7 @@ opciones
 
 union
   = expr:expresion rest:(_ @expresion !(_ literales? _ "=") )* {
+    // console.log(expr, rest);
     return new n.Union([expr, ...rest]);
   }
 

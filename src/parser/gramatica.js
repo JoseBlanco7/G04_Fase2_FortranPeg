@@ -284,6 +284,7 @@ function peg$parse(input, options) {
     return new n.Opciones([expr, ...rest]);
   };
   var peg$f3 = function(expr, rest) {
+    // console.log(expr, rest);
     return new n.Union([expr, ...rest]);
   };
   var peg$f4 = function(label, expr, qty) {

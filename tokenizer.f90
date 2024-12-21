@@ -27,67 +27,24 @@ function nextSym(input, cursor) result(lexeme)
     end if
 
     
-    if ("fizz" == input(cursor:cursor + 3)) then !Foo
-        allocate(character(len=4) :: lexeme)
-        lexeme = input(cursor:cursor + 3)
-        cursor = cursor + 4
-        return
+if ("prueba" == input(cursor:cursor + 5)) then 
+    allocate(character(len=6) :: lexeme)
+    lexeme = "prueba"
+    cursor = cursor + 6 
+    if(to_lower("xd") == to_lower(input(cursor:cursor + 1))) then 
+        deallocate(lexeme)
+        allocate(character(len=8) :: lexeme)
+        lexeme = "prueba" // "xd"
+        cursor = cursor + 2
+        if ("hola" == input(cursor:cursor + 3)) then 
+            deallocate(lexeme)
+            allocate(character(len=12) :: lexeme)
+            lexeme= "pruebaxd" // "hola"
+            cursor = cursor + 4
+            return
+        end if
     end if
-        
-
-    if ("buzz" == input(cursor:cursor + 3)) then !Foo
-        allocate(character(len=4) :: lexeme)
-        lexeme = input(cursor:cursor + 3)
-        cursor = cursor + 4
-        return
-    end if
-        
-
-    if ("hueco" == input(cursor:cursor + 4)) then !Foo
-        allocate(character(len=5) :: lexeme)
-        lexeme = input(cursor:cursor + 4)
-        cursor = cursor + 5
-        return
-    end if
-        
-
-i = cursor
-
-
-if (input(i:i) >= "0" .and. input(i:i) <= "9") then
-    lexeme = input(cursor:i)
-    cursor = i + 1
-    return
 end if
-    
-    
-
-    if (to_lower("es Gei") == to_lower(input(cursor:cursor + 5))) then !Foo
-        allocate(character(len=6) :: lexeme)
-        lexeme = input(cursor:cursor + 5)
-        cursor = cursor + 6
-        return
-    end if
-        
-
-i = cursor
-
-
-if (input(i:i) >= "A" .and. input(i:i) <= "z") then
-    lexeme = input(cursor:i)
-    cursor = i + 1
-    return
-end if
-    
-    
-
-    if ("joshua" == input(cursor:cursor + 5)) then !Foo
-        allocate(character(len=6) :: lexeme)
-        lexeme = input(cursor:cursor + 5)
-        cursor = cursor + 6
-        return
-    end if
-        
 
     print *, "error lexico en col ", cursor, ', "'//input(cursor:cursor)//'"'
     lexeme = "ERROR"
