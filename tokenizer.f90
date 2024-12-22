@@ -28,30 +28,40 @@ function nextSym(input, cursor) result(lexeme)
     end if
 
     
-	if (to_lower("prueba") == to_lower(input(cursor:cursor + 5))) then 
-		allocate(character(len=6) :: lexeme)
-	    allocate(character(len=6) :: entrada_anterior)
-	    lexeme = input(cursor:cursor + 5)
+	if ("xd" == input(cursor:cursor + 1)) then 
+	    allocate(character(len=2) :: lexeme)
+	    allocate(character(len=2) :: entrada_anterior)
+	    lexeme = "xd"
 	    entrada_anterior = lexeme
-	    cursor = cursor + 6 
-		if (to_lower("xd") == to_lower(input(cursor:cursor + 1))) then 
+	    cursor = cursor + 2 
+		if ("probando" == input(cursor:cursor + 7)) then 
 	    	deallocate(lexeme)
-	    	allocate(character(len=8) :: lexeme)
-	    	lexeme = entrada_anterior // input(cursor:cursor + 1)
+	    	allocate(character(len=10) :: lexeme)
+	    	lexeme = entrada_anterior // input(cursor:cursor + 7)
 	    	deallocate(entrada_anterior)
 	    	entrada_anterior = lexeme
-	    	cursor = cursor + 2
-			if (to_lower("hola") == to_lower(input(cursor:cursor + 3))) then 
+	    	cursor = cursor + 8
+			if (to_lower("compi") == to_lower(input(cursor:cursor + 4))) then 
 	    		deallocate(lexeme)
-	    		allocate(character(len=12) :: lexeme)
-	    		lexeme = entrada_anterior // input(cursor:cursor + 3)
+	    		allocate(character(len=15) :: lexeme)
+	    		lexeme = entrada_anterior // input(cursor:cursor + 4)
+	    		lexeme = lexeme // " - " // "EstaEsUnaPrueba"
 	    		deallocate(entrada_anterior)
 	    		entrada_anterior = lexeme
-	    		cursor = cursor + 4
+	    		cursor = cursor + 5
 				return
 			end if
 		end if
 	end if
+
+    if (to_lower("hola") == to_lower(input(cursor:cursor + 3))) then !Foo
+        allocate(character(len=4) :: lexeme)
+        lexeme = input(cursor:cursor + 3)
+        lexeme = lexeme // " - " // "EstaEsUnaPrueba"
+        cursor = cursor + 4
+        return
+    end if
+            
 
     print *, "error lexico en col ", cursor, ', "'//input(cursor:cursor)//'"'
     lexeme = "ERROR"

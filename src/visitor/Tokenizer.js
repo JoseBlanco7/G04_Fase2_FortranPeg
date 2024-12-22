@@ -42,33 +42,54 @@ end module tokenizer
     }
 
     visitProducciones(node) {
+        // console.log(node);
+        try {
+            const aliasString = node.alias
+        .map(subArray => subArray[1]) 
+        .join(''); 
+      
+        node.alias = aliasString;
+        node.expr.alias = node.alias;
+    } catch (error) {
+        // No existe un alias
+        node.alias = node.id;
+        node.expr.alias = node.alias;
+        }
+        // console.log(node);
         return node.expr.accept(this);
     }
     visitOpciones(node) {
+        let prueba = node
+        // console.log(node.exprs);
+        node.exprs.map((node) => node.alias = prueba.alias);
+        // node.expr[].alias = node.alias;
         return node.exprs.map((node) => node.accept(this)).join('\n');
     }
     visitUnion(node) {
-           let fortran = "";
+        // console.log(node.alias);
+        let fortran = "";
         if (node.exprs.length == 1){
             // console.log(node.exprs);
             if (node.exprs[0].expr.isCase == 'i') {
                 // Comparación insensible a mayúsculas y minúsculas
         return `
-        if (to_lower("${node.exprs[0].expr.val}") == to_lower(input(cursor:cursor + ${node.exprs[0].expr.val.length - 1}))) then !Foo
-            allocate(character(len=${node.exprs[0].expr.val.length}) :: lexeme)
-            lexeme = input(cursor:cursor + ${node.exprs[0].expr.val.length - 1})
-            cursor = cursor + ${node.exprs[0].expr.val.length}
-            return
-        end if
+    if (to_lower("${node.exprs[0].expr.val}") == to_lower(input(cursor:cursor + ${node.exprs[0].expr.val.length - 1}))) then !Foo
+        allocate(character(len=${node.exprs[0].expr.val.length}) :: lexeme)
+        lexeme = input(cursor:cursor + ${node.exprs[0].expr.val.length - 1})
+        lexeme = lexeme // " - " // "${node.alias}"
+        cursor = cursor + ${node.exprs[0].expr.val.length}
+        return
+    end if
             `;
             }
         return `
-        if ("${node.exprs[0].expr.val}" == input(cursor:cursor + ${node.exprs[0].expr.val.length - 1})) then !Foo
-            allocate(character(len=${node.exprs[0].expr.val.length}) :: lexeme)
-            lexeme = input(cursor:cursor + ${node.exprs[0].expr.val.length - 1})
-            cursor = cursor + ${node.exprs[0].expr.val.length}
-            return
-        end if`
+    if ("${node.exprs[0].expr.val}" == input(cursor:cursor + ${node.exprs[0].expr.val.length - 1})) then !Foo
+        allocate(character(len=${node.exprs[0].expr.val.length}) :: lexeme)
+        lexeme = input(cursor:cursor + ${node.exprs[0].expr.val.length - 1})
+        lexeme = lexeme // " - " // "${node.alias}"
+        cursor = cursor + ${node.exprs[0].expr.val.length}
+        return
+    end if`
             
         }
         let repeticiones = 0;
@@ -98,6 +119,7 @@ end module tokenizer
 \t    ${tabuladores}deallocate(lexeme)
 \t    ${tabuladores}allocate(character(len=${longitud}) :: lexeme)
 \t    ${tabuladores}lexeme = entrada_anterior // input(cursor:cursor + ${element.expr.val.length - 1})
+\t    ${tabuladores}lexeme = lexeme // " - " // "${node.alias}"
 \t    ${tabuladores}deallocate(entrada_anterior)
 \t    ${tabuladores}entrada_anterior = lexeme
 \t    ${tabuladores}cursor = cursor + ${element.expr.val.length}`
@@ -125,7 +147,7 @@ end module tokenizer
 \t    ${tabuladores}allocate(character(len=${element.expr.val.length}) :: lexeme)
 \t    ${tabuladores}allocate(character(len=${element.expr.val.length}) :: entrada_anterior)
 \t    ${tabuladores}lexeme = "${element.expr.val}"
-\t    ${tabuladores} entrada_anterior = lexeme
+\t    ${tabuladores}entrada_anterior = lexeme
 \t    ${tabuladores}cursor = cursor + ${element.expr.val.length} `
                     repeticiones++;
                     longitud = element.expr.val.length;
@@ -137,6 +159,7 @@ end module tokenizer
 \t    ${tabuladores}deallocate(lexeme)
 \t    ${tabuladores}allocate(character(len=${longitud}) :: lexeme)
 \t    ${tabuladores}lexeme = entrada_anterior // input(cursor:cursor + ${element.expr.val.length - 1})
+\t    ${tabuladores}lexeme = lexeme // " - " // "${node.alias}"
 \t    ${tabuladores}deallocate(entrada_anterior)
 \t    ${tabuladores}entrada_anterior = lexeme
 \t    ${tabuladores}cursor = cursor + ${element.expr.val.length}`
