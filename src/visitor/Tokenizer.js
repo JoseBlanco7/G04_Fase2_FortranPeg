@@ -1,5 +1,5 @@
 import Visitor from './Visitor.js';
-import { Rango,String } from './CST.js';
+import { Rango,String,Clase } from './CST.js';
 
 export default class Tokenizer extends Visitor {
     generateTokenizer(grammar) {
@@ -68,8 +68,8 @@ end module tokenizer
     visitUnion(node) {
         // console.log(node.alias);
         let fortran = "";
-        if (node.exprs.length == 1){
-            // console.log(node.exprs);
+        if (node.exprs.length == 1){  // Si solo hay una expresión en la gramática pero solo literales
+            if (node.exprs[0].expr instanceof String){
             if (node.exprs[0].expr.isCase == 'i') {
                 // Comparación insensible a mayúsculas y minúsculas
         return `
@@ -91,12 +91,17 @@ end module tokenizer
         return
     end if`
             
-        }
+        } // else if si el primer nodo es una clase
+    }
         let repeticiones = 0;
         let total_nodos = node.exprs.length;
+        console.log(total_nodos + " Nodos");
         let longitud = 0;
+        // console.log(node);
         node.exprs.forEach(element => {
+            console.log(element);
             const tabuladores = "\t".repeat(repeticiones);
+            // console.log(element.expr);
             if (element.expr instanceof String){
                 // Case insensitive
                 if (element.expr.isCase == 'i') {
@@ -178,6 +183,99 @@ end module tokenizer
 \t    ${tabuladores}cursor = cursor + ${element.expr.val.length}`
                 repeticiones++;
                     } 
+            }
+        }else if (element.expr instanceof Clase){
+            // console.log(element);
+            let bot =element.expr.chars[0].bottom;
+            let top =element.expr.chars[0].top;
+            if (element.expr.isCase == 'i') {
+                console.log("Case insensitive");
+                if (bot < top){
+                if (repeticiones == 0){
+                    // Primera Repeticion
+                    fortran += `
+\t${tabuladores}if (to_lower(input(cursor:cursor)) >= '${bot}' .and. to_lower(input(cursor:cursor)) <= '${top}') then
+\t${tabuladores}    allocate(character(len=1) :: lexeme)  ! Reservar espacio para el lexema
+\t${tabuladores}    lexeme = input(cursor:cursor)        ! Asignar el carácter al lexema
+\t${tabuladores}    if (.not. allocated(entrada_anterior)) then
+\t${tabuladores}        allocate(character(len=len(lexeme)) :: entrada_anterior)
+\t${tabuladores}    end if
+\t${tabuladores}    entrada_anterior = lexeme
+\t${tabuladores}    cursor = cursor + 1                  ! Avanzar el cursor
+`
+                repeticiones++;
+                // Ultima Repeticion
+                }else if (repeticiones == total_nodos - 1) {
+                    // console.log("Ultima Repeticion");
+                    fortran += `
+\t${tabuladores}if (to_lower(input(cursor:cursor)) >= '${bot}' .and. to_lower(input(cursor:cursor)) <= '${top}') then
+\t    ${tabuladores}deallocate(lexeme)
+\t    ${tabuladores}allocate(character(len=1) :: lexeme)
+\t    ${tabuladores}lexeme = entrada_anterior // input(cursor:cursor)
+\t    ${tabuladores}lexeme = lexeme // " - " // "${node.alias}"
+\t    ${tabuladores}deallocate(entrada_anterior)
+\t    ${tabuladores}entrada_anterior = lexeme
+\t    ${tabuladores}cursor = cursor + 1`
+                    repeticiones++;
+                    // console.log("Ultima Repeticion 2");
+                } else {
+                    // Repeticiones intermedias
+                        fortran += `
+\t${tabuladores}if (to_lower(input(cursor:cursor)) >= '${bot}' .and. to_lower(input(cursor:cursor)) <= '${top}') then
+\t    ${tabuladores}deallocate(lexeme)
+\t    ${tabuladores}allocate(character(len=1) :: lexeme)
+\t    ${tabuladores}lexeme = entrada_anterior // input(cursor:cursor)
+\t    ${tabuladores}deallocate(entrada_anterior)
+\t    ${tabuladores}entrada_anterior = lexeme`
+        fortran += `
+\t    ${tabuladores}cursor = cursor + 1`
+                repeticiones++;
+                }
+            }
+        } else {
+                // console.log("Sin Case insensitive");
+                if (bot < top){
+                    if (repeticiones == 0){
+                        // Primera Repeticion
+                        fortran += `
+    \t${tabuladores}if (input(cursor:cursor) >= '${bot}' .and. input(cursor:cursor) <= '${top}') then
+    \t${tabuladores}    allocate(character(len=1) :: lexeme)  ! Reservar espacio para el lexema
+    \t${tabuladores}    lexeme = input(cursor:cursor)        ! Asignar el carácter al lexema
+    \t${tabuladores}    if (.not. allocated(entrada_anterior)) then
+    \t${tabuladores}        allocate(character(len=len(lexeme)) :: entrada_anterior)
+    \t${tabuladores}    end if
+    \t${tabuladores}    entrada_anterior = lexeme
+    \t${tabuladores}    cursor = cursor + 1                  ! Avanzar el cursor
+    `
+                    repeticiones++;
+                    // Ultima Repeticion
+                    }else if (repeticiones == total_nodos - 1) {
+                        // console.log("Ultima Repeticion");
+                        fortran += `
+    \t${tabuladores}if (input(cursor:cursor) >= '${bot}' .and. input(cursor:cursor) <= '${top}') then
+    \t    ${tabuladores}deallocate(lexeme)
+    \t    ${tabuladores}allocate(character(len=1) :: lexeme)
+    \t    ${tabuladores}lexeme = entrada_anterior // input(cursor:cursor)
+    \t    ${tabuladores}lexeme = lexeme // " - " // "${node.alias}"
+    \t    ${tabuladores}deallocate(entrada_anterior)
+    \t    ${tabuladores}entrada_anterior = lexeme
+    \t    ${tabuladores}cursor = cursor + 1`
+                        repeticiones++;
+                        // console.log("Ultima Repeticion 2");
+                    } else {
+                        // Repeticiones intermedias
+                            fortran += `
+    \t${tabuladores}if (input(cursor:cursor) >= '${bot}' .and. (input(cursor:cursor) <= '${top}')) then
+    \t    ${tabuladores}deallocate(lexeme)
+    \t    ${tabuladores}allocate(character(len=1) :: lexeme)
+    \t    ${tabuladores}lexeme = entrada_anterior // input(cursor:cursor)
+    \t    ${tabuladores}deallocate(entrada_anterior)
+    \t    ${tabuladores}entrada_anterior = lexeme`
+            fortran += `
+    \t    ${tabuladores}cursor = cursor + 1`
+                    repeticiones++;
+                    }
+                }
             }
         }
         });
