@@ -91,8 +91,38 @@ end module tokenizer
         return
     end if`
             
-        } // else if si el primer nodo es una clase
+        }else if (node.exprs[0].expr instanceof Clase)     {
+            let bot =node.exprs[0].expr.chars[0].bottom;
+            let top =node.exprs[0].expr.chars[0].top;
+            if (node.exprs[0].expr.isCase == 'i') {
+                // Comparación insensible a mayúsculas y minúsculas
+                return `
+    if (to_lower(input(cursor:cursor)) >= '${bot}' .and. to_lower(input(cursor:cursor)) <= '${top}') then
+        allocate(character(len=1) :: lexeme)  ! Reservar espacio para el lexema
+        lexeme = input(cursor:cursor)        ! Asignar el carácter al lexema
+        lexeme = lexeme // " - " // "${node.alias}"
+        cursor = cursor + 1                  ! Avanzar el cursor
+        return
+    end if
+                `;
+            } else {
+                // Comparación sensible a mayúsculas y minúsculas
+                return `
+    if (input(cursor:cursor) >= '${bot}' .and. input(cursor:cursor) <= '${top}') then
+        allocate(character(len=1) :: lexeme)  ! Reservar espacio para el lexema
+        lexeme = input(cursor:cursor)        ! Asignar el carácter al lexema
+        lexeme = lexeme // " - " // "${node.alias}"
+        cursor = cursor + 1                  ! Avanzar el cursor
+        return
+    end if
+                `;
+            }
+        }
+
     }
+
+
+
         let repeticiones = 0;
         let total_nodos = node.exprs.length;
         console.log(total_nodos + " Nodos");

@@ -11,7 +11,7 @@ program parser
     use tokenizer
     implicit none
 
-    character(len=*), parameter :: input = "xdprobandoComPIholaHoLAE"
+    character(len=*), parameter :: input = "1"
     integer :: cursor
     character(len=:), allocatable :: lexeme
 
