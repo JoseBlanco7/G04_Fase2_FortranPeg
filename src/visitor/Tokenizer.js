@@ -23,6 +23,7 @@ function nextSym(input, cursor) result(lexeme)
     character(len=*), intent(in) :: input
     integer, intent(inout) :: cursor
     character(len=:), allocatable :: lexeme
+    character(len=:), allocatable :: entrada_anterior
     integer :: i
 
     if (cursor > len(input)) then
@@ -49,7 +50,7 @@ end module tokenizer
     visitUnion(node) {
            let fortran = "";
         if (node.exprs.length == 1){
-            console.log(node.exprs);
+            // console.log(node.exprs);
             if (node.exprs[0].expr.isCase == 'i') {
                 // Comparación insensible a mayúsculas y minúsculas
         return `
@@ -73,87 +74,103 @@ end module tokenizer
         let repeticiones = 0;
         let total_nodos = node.exprs.length;
         let longitud = 0;
-        let lexema_anterior = "";
         node.exprs.forEach(element => {
             const tabuladores = "\t".repeat(repeticiones);
             if (element.expr instanceof String){
                 // Case insensitive
                 if (element.expr.isCase == 'i') {
                     if (repeticiones == 0){
+                        // Primera Repeticion
                         fortran += `
-    ${tabuladores}if (to_lower("${element.expr.val}") == to_lower(input(cursor:cursor + ${element.expr.val.length - 1}))) then 
-        ${tabuladores}allocate(character(len=${element.expr.val.length}) :: lexeme)
-        ${tabuladores}lexeme = "${element.expr.val}"
-        ${tabuladores}cursor = cursor + ${element.expr.val.length} `
+\t${tabuladores}if (to_lower("${element.expr.val}") == to_lower(input(cursor:cursor + ${element.expr.val.length - 1}))) then 
+\t    ${tabuladores}allocate(character(len=${element.expr.val.length}) :: lexeme)
+\t    ${tabuladores}allocate(character(len=${element.expr.val.length}) :: entrada_anterior)
+\t    ${tabuladores}lexeme = input(cursor:cursor + ${element.expr.val.length - 1})
+\t    ${tabuladores}entrada_anterior = lexeme
+\t    ${tabuladores}cursor = cursor + ${element.expr.val.length} `
                     repeticiones++;
-                    lexema_anterior = element.expr.val;
                     longitud = element.expr.val.length;
+                    // Ultima Repeticion
                     } else if(repeticiones == total_nodos - 1){
                         longitud += element.expr.val.length;
                         fortran += `
-    ${tabuladores}if (to_lower("${element.expr.val}") == to_lower(input(cursor:cursor + ${element.expr.val.length - 1}))) then 
-        ${tabuladores}deallocate(lexeme)
-        ${tabuladores}allocate(character(len=${longitud}) :: lexeme)
-        ${tabuladores}lexeme= "${lexema_anterior}" // "${element.expr.val}"
-        ${tabuladores}cursor = cursor + ${element.expr.val.length}`
-                        lexema_anterior += element.expr.val;
+\t${tabuladores}if (to_lower("${element.expr.val}") == to_lower(input(cursor:cursor + ${element.expr.val.length - 1}))) then 
+\t    ${tabuladores}deallocate(lexeme)
+\t    ${tabuladores}allocate(character(len=${longitud}) :: lexeme)
+\t    ${tabuladores}lexeme = entrada_anterior // input(cursor:cursor + ${element.expr.val.length - 1})
+\t    ${tabuladores}deallocate(entrada_anterior)
+\t    ${tabuladores}entrada_anterior = lexeme
+\t    ${tabuladores}cursor = cursor + ${element.expr.val.length}`
+                        repeticiones++;
+                        // Repeticiones intermedias
                     } else {
                         longitud += element.expr.val.length;
                         fortran += `
-    ${tabuladores}if (to_lower("${element.expr.val}") == to_lower(input(cursor:cursor + ${element.expr.val.length - 1}))) then 
-        ${tabuladores}deallocate(lexeme)
-        ${tabuladores}allocate(character(len=${longitud}) :: lexeme)
-        ${tabuladores}lexeme = "${lexema_anterior}" // "${element.expr.val}"
-        ${tabuladores}cursor = cursor + ${element.expr.val.length}`
-                        lexema_anterior += element.expr.val;
+\t${tabuladores}if (to_lower("${element.expr.val}") == to_lower(input(cursor:cursor + ${element.expr.val.length - 1}))) then 
+\t    ${tabuladores}deallocate(lexeme)
+\t    ${tabuladores}allocate(character(len=${longitud}) :: lexeme)
+\t    ${tabuladores}lexeme = entrada_anterior // input(cursor:cursor + ${element.expr.val.length - 1})
+\t    ${tabuladores}deallocate(entrada_anterior)
+\t    ${tabuladores}entrada_anterior = lexeme`
+        fortran += `
+\t    ${tabuladores}cursor = cursor + ${element.expr.val.length}`
                 repeticiones++;
                     } 
+                    // Sin Case insensitive
                 } else {
-                if (repeticiones == 0){
-                    fortran += `
-${tabuladores}if ("${element.expr.val}" == input(cursor:cursor + ${element.expr.val.length - 1})) then 
-    ${tabuladores}allocate(character(len=${element.expr.val.length}) :: lexeme)
-    ${tabuladores}lexeme = "${element.expr.val}"
-    ${tabuladores}cursor = cursor + ${element.expr.val.length} `
+                    if (repeticiones == 0){
+                        // Primera Repeticion
+                        fortran += `
+\t${tabuladores}if ("${element.expr.val}" == input(cursor:cursor + ${element.expr.val.length - 1})) then 
+\t    ${tabuladores}allocate(character(len=${element.expr.val.length}) :: lexeme)
+\t    ${tabuladores}allocate(character(len=${element.expr.val.length}) :: entrada_anterior)
+\t    ${tabuladores}lexeme = "${element.expr.val}"
+\t    ${tabuladores} entrada_anterior = lexeme
+\t    ${tabuladores}cursor = cursor + ${element.expr.val.length} `
+                    repeticiones++;
+                    longitud = element.expr.val.length;
+                    // Ultima Repeticion
+                    } else if(repeticiones == total_nodos - 1){
+                        longitud += element.expr.val.length;
+                        fortran += `
+\t${tabuladores}if ("${element.expr.val}" == input(cursor:cursor + ${element.expr.val.length - 1})) then 
+\t    ${tabuladores}deallocate(lexeme)
+\t    ${tabuladores}allocate(character(len=${longitud}) :: lexeme)
+\t    ${tabuladores}lexeme = entrada_anterior // input(cursor:cursor + ${element.expr.val.length - 1})
+\t    ${tabuladores}deallocate(entrada_anterior)
+\t    ${tabuladores}entrada_anterior = lexeme
+\t    ${tabuladores}cursor = cursor + ${element.expr.val.length}`
+                        repeticiones++;
+                        // Repeticiones intermedias
+                    } else {
+                        longitud += element.expr.val.length;
+                        fortran += `
+\t${tabuladores}if ("${element.expr.val}" == input(cursor:cursor + ${element.expr.val.length - 1})) then 
+\t    ${tabuladores}deallocate(lexeme)
+\t    ${tabuladores}allocate(character(len=${longitud}) :: lexeme)
+\t    ${tabuladores}lexeme = entrada_anterior // input(cursor:cursor + ${element.expr.val.length - 1})
+\t    ${tabuladores}deallocate(entrada_anterior)
+\t    ${tabuladores}entrada_anterior = lexeme`
+        fortran += `
+\t    ${tabuladores}cursor = cursor + ${element.expr.val.length}`
                 repeticiones++;
-                lexema_anterior = element.expr.val;
-                longitud = element.expr.val.length;
-                } else if(repeticiones == total_nodos - 1){
-                    longitud += element.expr.val.length;
-                    fortran += `
-${tabuladores}if ("${element.expr.val}" == input(cursor:cursor + ${element.expr.val.length - 1})) then 
-    ${tabuladores}deallocate(lexeme)
-    ${tabuladores}allocate(character(len=${longitud}) :: lexeme)
-    ${tabuladores}lexeme= "${lexema_anterior}" // "${element.expr.val}"
-    ${tabuladores}cursor = cursor + ${element.expr.val.length}`
-                    lexema_anterior += element.expr.val;
-                } else {
-                    longitud += element.expr.val.length;
-                    fortran += `
-${tabuladores}if ("${element.expr.val}" == input(cursor:cursor + ${element.expr.val.length - 1})) then 
-    ${tabuladores}deallocate(lexeme)
-    ${tabuladores}allocate(character(len=${longitud}) :: lexeme)
-    ${tabuladores}lexeme = "${lexema_anterior}" // "${element.expr.val}"
-    ${tabuladores}cursor = cursor + ${element.expr.val.length}`
-                    lexema_anterior += element.expr.val;
-            repeticiones++;
-                } 
-            }}
+                    } 
+            }
+        }
         });
         for (let i = repeticiones; i > 0; i--) {
             let tabuladores = "\t".repeat(i);
-            if (i == repeticiones){
+            if (i >= repeticiones){
                 fortran += `
-${tabuladores}\treturn
-${tabuladores}end if`;
+\t${tabuladores}return`;
             }else{
             fortran += `
-${tabuladores}end if`;
+\t${tabuladores}end if`;
             }
         }
         let tabuladores = "\t".repeat(repeticiones);
                 fortran += `
-end if`;       
+\tend if`;       
         return fortran;
     }
     visitExpresion(node) {
