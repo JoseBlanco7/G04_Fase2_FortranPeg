@@ -132,3 +132,12 @@ dist
 
 # Ignorar el archivo tokenizador
 tokenizer.f90
+
+#ignorar carpeta node_modules
+node_modules
+
+#ignorar el archivo package-lock
+package-lock.json
+
+#ignorar el archivo package
+package.json

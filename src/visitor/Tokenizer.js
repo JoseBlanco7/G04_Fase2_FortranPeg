@@ -4,10 +4,31 @@ import { Rango,String,Clase } from './CST.js';
 export default class Tokenizer extends Visitor {
     generateTokenizer(grammar) {
         return `
-module tokenizer
+module parser
 implicit none
 
-contains
+contains    
+
+subroutine parse(input)
+    character(len=:), intent(inout), allocatable :: input
+    integer :: cursor
+    character(len=:), allocatable :: lexeme  
+    cursor = 1
+    do
+        lexeme = nextsym(input, cursor)
+        if (lexeme == "EOF") then
+            print *, lexeme
+            exit   
+        end if
+        if (lexeme == "ERROR") then
+            print *, lexeme
+        else
+            print *, lexeme
+        end if
+    end do
+end subroutine parse
+
+
 function to_lower(str) result(lower_str)
         character(len=*), intent(in) :: str
         character(len=len(str)) :: lower_str
@@ -27,7 +48,7 @@ function nextSym(input, cursor) result(lexeme)
     integer :: i
 
     if (cursor > len(input)) then
-        allocate( character(len=3) :: lexeme )
+        allocate(character(len=3) :: lexeme)
         lexeme = "EOF"
         return
     end if
@@ -35,9 +56,11 @@ function nextSym(input, cursor) result(lexeme)
     ${grammar.map((produccion) => produccion.accept(this)).join('\n')}
 
     print *, "error lexico en col ", cursor, ', "'//input(cursor:cursor)//'"'
+    cursor = cursor + 1  ! Incrementa el cursor para evitar el bucle infinito
     lexeme = "ERROR"
+
 end function nextSym
-end module tokenizer 
+end module parser
         `;
     }
 
