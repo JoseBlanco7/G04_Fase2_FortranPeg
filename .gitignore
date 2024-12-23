@@ -134,10 +134,21 @@ dist
 tokenizer.f90
 
 #ignorar carpeta node_modules
-node_modules
+node_modules/
 
 #ignorar el archivo package-lock
 package-lock.json
 
 #ignorar el archivo package
 package.json
+
+#ignorar caperta tools
+toos/
+
+#ignorar archivos sin uso momentaneo
+.editorconfig
+.prettierrc
+Makefile
+parser.f90
+parser.o
+test.exe
