@@ -45,7 +45,11 @@ function nextSym(input, cursor) result(lexeme)
     integer, intent(inout) :: cursor
     character(len=:), allocatable :: lexeme
     character(len=:), allocatable :: entrada_anterior
+    logical :: matchSomeInput
     integer :: i
+
+    integer :: stringLen 
+    character(len=:), allocatable :: strToEvaluate
 
     if (cursor > len(input)) then
         allocate(character(len=3) :: lexeme)
@@ -89,11 +93,240 @@ end module parser
         return node.exprs.map((node) => node.accept(this)).join('\n');
     }
     visitUnion(node) {
-        // console.log(node.alias);
+        let qualifier = "";
+    
+        console.log(node.exprs[0].qty);
+        qualifier = node.exprs[0].qty;
+        
         let fortran = "";
         if (node.exprs.length == 1){  // Si solo hay una expresión en la gramática pero solo literales
             if (node.exprs[0].expr instanceof String){
+            if(qualifier != ""){
+                 if(node.exprs[0].expr.isCase == 'i'){
+                    return `
+                    
+                    stringLen = ${node.exprs[0].expr.val.length}
+                    allocate(character(len=stringLen) :: strToEvaluate)
+                    strToEvaluate = "${ node.exprs[0].expr.val}" 
+                    
+
+                    SELECT CASE ("${qualifier}")
+                    CASE ("?")
+                        if (to_lower(strToEvaluate) == to_lower(input(cursor:cursor + stringLen-1))) then !Foo
+                            allocate(character(len=stringLen) :: lexeme)
+                            lexeme = input(cursor:cursor + stringLen-1) 
+                            lexeme = lexeme // " - " // "${node.alias}"
+                            cursor = cursor + stringLen
+                            return
+                        end if
+        CASE ("*")
+        matchSomeInput = .FALSE.
+        do while(to_lower(input(cursor:cursor + stringLen-1)) == to_lower(strToEvaluate) )
+            if (cursor > len(input)) then
+                allocate( character(len=3) :: lexeme )
+                lexeme = "EOF"
+                return
+            end if
+            matchSomeInput = .TRUE.
+            if (.not. allocated(lexeme)) then
+                if(.not. allocated(entrada_anterior)) then 
+                    allocate(character(len=stringLen) :: lexeme)
+                    lexeme = input(cursor:cursor+stringLen-1)
+                end if
+            else if (.not. allocated(entrada_anterior)) then
+                allocate(character(len(lexeme)+stringLen) :: entrada_anterior)
+                entrada_anterior = lexeme // input(cursor:cursor+stringLen-1)
+                deallocate(lexeme)
+                allocate(character(len(entrada_anterior)) :: lexeme)
+                lexeme = entrada_anterior            
+            else
+                deallocate(entrada_anterior)
+                allocate(character(len(lexeme)+stringLen) :: entrada_anterior)
+                entrada_anterior = lexeme // input(cursor:cursor+stringLen-1)
+                deallocate(lexeme)
+                allocate(character(len(entrada_anterior)) :: lexeme)
+                lexeme = entrada_anterior       
+            end if
+            cursor = cursor + stringLen                 
+        end do
+        if(matchSomeInput .eqv. .FALSE.) then
+            print *, "error lexico en col ", cursor, ', "'//input(cursor:cursor)//'"'
+            lexeme = "ERROR"   
+            cursor = cursor + 1; 
+            return 
+        else
+            lexeme = lexeme // " - " // "${node.alias}"
+            return
+        end if 
+        
+        CASE ("+")
+        matchSomeInput = .FALSE.
+        do while(to_lower(input(cursor:cursor + stringLen-1)) == to_lower(strToEvaluate) )
+            if (cursor > len(input)) then
+                allocate( character(len=3) :: lexeme )
+                lexeme = "EOF"
+                return
+            end if
+            matchSomeInput = .TRUE.
+            if (.not. allocated(lexeme)) then
+                if(.not. allocated(entrada_anterior)) then 
+                    allocate(character(len=stringLen) :: lexeme)
+                    lexeme = input(cursor:cursor+stringLen-1)
+                end if
+            else if (.not. allocated(entrada_anterior)) then
+                allocate(character(len(lexeme)+stringLen) :: entrada_anterior)
+                entrada_anterior = lexeme // input(cursor:cursor+stringLen-1)
+                deallocate(lexeme)
+                allocate(character(len(entrada_anterior)) :: lexeme)
+                lexeme = entrada_anterior            
+            else
+                deallocate(entrada_anterior)
+                allocate(character(len(lexeme)+stringLen) :: entrada_anterior)
+                entrada_anterior = lexeme // input(cursor:cursor+stringLen-1)
+                deallocate(lexeme)
+                allocate(character(len(entrada_anterior)) :: lexeme)
+                lexeme = entrada_anterior       
+            end if
+            cursor = cursor + stringLen                 
+        end do
+        if(matchSomeInput .eqv. .FALSE.) then
+            print *, "error lexico en col ", cursor, ', "'//input(cursor:cursor)//'"'
+            lexeme = "ERROR"   
+            cursor = cursor + 1; 
+            return 
+        else
+            lexeme = lexeme // " - " // "${node.alias}"
+            return
+        end if 
+    CASE DEFAULT
+        if (to_lower(strToEvaluate) == to_lower(input(cursor:cursor + stringLen-1))) then !Foo
+            allocate(character(len=6) :: lexeme)
+            lexeme = input(cursor:cursor + stringLen-1)
+            lexeme = lexeme // " - " //  "${node.alias}"
+            cursor = cursor + stringLen
+            return
+        end if
+    END SELECT
+
+
+                    `;
+                }
+
+            }else{
+                return `
+                    
+                stringLen = ${node.exprs[0].expr.val.length}
+                allocate(character(len=stringLen) :: strToEvaluate)
+                strToEvaluate = "${ node.exprs[0].expr.val}" 
+                
+
+                SELECT CASE ("${qualifier}")
+                CASE ("?")
+                    if (strToEvaluate == input(cursor:cursor + stringLen-1)) then !Foo
+                        allocate(character(len=stringLen) :: lexeme)
+                        lexeme = input(cursor:cursor + stringLen-1) 
+                        lexeme = lexeme // " - " // "${node.alias}"
+                        cursor = cursor + stringLen
+                        return
+                    end if
+    CASE ("*")
+    matchSomeInput = .FALSE.
+    do while(input(cursor:cursor + stringLen-1) == strToEvaluate )
+        if (cursor > len(input)) then
+            allocate( character(len=3) :: lexeme )
+            lexeme = "EOF"
+            return
+        end if
+        matchSomeInput = .TRUE.
+        if (.not. allocated(lexeme)) then
+            if(.not. allocated(entrada_anterior)) then 
+                allocate(character(len=stringLen) :: lexeme)
+                lexeme = input(cursor:cursor+stringLen-1)
+            end if
+        else if (.not. allocated(entrada_anterior)) then
+            allocate(character(len(lexeme)+stringLen) :: entrada_anterior)
+            entrada_anterior = lexeme // input(cursor:cursor+stringLen-1)
+            deallocate(lexeme)
+            allocate(character(len(entrada_anterior)) :: lexeme)
+            lexeme = entrada_anterior            
+        else
+            deallocate(entrada_anterior)
+            allocate(character(len(lexeme)+stringLen) :: entrada_anterior)
+            entrada_anterior = lexeme // input(cursor:cursor+stringLen-1)
+            deallocate(lexeme)
+            allocate(character(len(entrada_anterior)) :: lexeme)
+            lexeme = entrada_anterior       
+        end if
+        cursor = cursor + stringLen                 
+    end do
+    if(matchSomeInput .eqv. .FALSE.) then
+        print *, "error lexico en col ", cursor, ', "'//input(cursor:cursor)//'"'
+        lexeme = "ERROR"   
+        cursor = cursor + 1; 
+        return 
+    else
+        lexeme = lexeme // " - " // "${node.alias}"
+        return
+    end if 
+    
+    CASE ("+")
+    matchSomeInput = .FALSE.
+    do while(input(cursor:cursor + stringLen-1) == strToEvaluate )
+        if (cursor > len(input)) then
+            allocate( character(len=3) :: lexeme )
+            lexeme = "EOF"
+            return
+        end if
+        matchSomeInput = .TRUE.
+        if (.not. allocated(lexeme)) then
+            if(.not. allocated(entrada_anterior)) then 
+                allocate(character(len=stringLen) :: lexeme)
+                lexeme = input(cursor:cursor+stringLen-1)
+            end if
+        else if (.not. allocated(entrada_anterior)) then
+            allocate(character(len(lexeme)+stringLen) :: entrada_anterior)
+            entrada_anterior = lexeme // input(cursor:cursor+stringLen-1)
+            deallocate(lexeme)
+            allocate(character(len(entrada_anterior)) :: lexeme)
+            lexeme = entrada_anterior            
+        else
+            deallocate(entrada_anterior)
+            allocate(character(len(lexeme)+stringLen) :: entrada_anterior)
+            entrada_anterior = lexeme // input(cursor:cursor+stringLen-1)
+            deallocate(lexeme)
+            allocate(character(len(entrada_anterior)) :: lexeme)
+            lexeme = entrada_anterior       
+        end if
+        cursor = cursor + stringLen                 
+    end do
+    if(matchSomeInput .eqv. .FALSE.) then
+        print *, "error lexico en col ", cursor, ', "'//input(cursor:cursor)//'"'
+        lexeme = "ERROR"   
+        cursor = cursor + 1; 
+        return 
+    else
+        lexeme = lexeme // " - " // "${node.alias}"
+        return
+    end if 
+CASE DEFAULT
+    if (strToEvaluate == input(cursor:cursor + stringLen-1)) then !Foo
+        allocate(character(len=6) :: lexeme)
+        lexeme = input(cursor:cursor + stringLen-1)
+        lexeme = lexeme // " - " //  "${node.alias}"
+        cursor = cursor + stringLen
+        return
+    end if
+END SELECT
+
+
+                `;
+
+
+            }
+
+            
             if (node.exprs[0].expr.isCase == 'i') {
+
                 // Comparación insensible a mayúsculas y minúsculas
         return `
     if (to_lower("${node.exprs[0].expr.val}") == to_lower(input(cursor:cursor + ${node.exprs[0].expr.val.length - 1}))) then !Foo
@@ -117,29 +350,245 @@ end module parser
         }else if (node.exprs[0].expr instanceof Clase)     {
             let bot =node.exprs[0].expr.chars[0].bottom;
             let top =node.exprs[0].expr.chars[0].top;
-            if (node.exprs[0].expr.isCase == 'i') {
-                // Comparación insensible a mayúsculas y minúsculas
-                return `
-    if (to_lower(input(cursor:cursor)) >= '${bot}' .and. to_lower(input(cursor:cursor)) <= '${top}') then
-        allocate(character(len=1) :: lexeme)  ! Reservar espacio para el lexema
-        lexeme = input(cursor:cursor)        ! Asignar el carácter al lexema
-        lexeme = lexeme // " - " // "${node.alias}"
-        cursor = cursor + 1                  ! Avanzar el cursor
-        return
-    end if
-                `;
-            } else {
-                // Comparación sensible a mayúsculas y minúsculas
-                return `
-    if (input(cursor:cursor) >= '${bot}' .and. input(cursor:cursor) <= '${top}') then
-        allocate(character(len=1) :: lexeme)  ! Reservar espacio para el lexema
-        lexeme = input(cursor:cursor)        ! Asignar el carácter al lexema
-        lexeme = lexeme // " - " // "${node.alias}"
-        cursor = cursor + 1                  ! Avanzar el cursor
-        return
-    end if
-                `;
+
+            if(qualifier != ""){
+                if (node.exprs[0].expr.isCase == 'i') {
+                    return  `
+
+                    SELECT CASE ("${qualifier}")
+                            CASE ("?")
+
+                        if (to_lower(input(cursor:cursor)) >= '${bot}' .and. to_lower(input(cursor:cursor)) <= '${top}') then
+                            allocate(character(len=1) :: lexeme)  
+                            lexeme = input(cursor:cursor)        
+                            lexeme = lexeme // " - " // "${node.alias}"
+                            cursor = cursor + 1                  
+                            return)) <=
+                        end if
+                    CASE ("*")
+                        matchSomeInput = .FALSE.
+                        do while(to_lower(input(cursor:cursor)) >= '${bot}' .and. to_lower(input(cursor:cursor)) <= '${top}')
+                            if (cursor > len(input)) then
+                                allocate( character(len=3) :: lexeme )
+                                lexeme = "EOF"
+                                return
+                            end if
+                            matchSomeInput = .TRUE.
+                            if (.not. allocated(lexeme)) then
+                                if(.not. allocated(entrada_anterior)) then 
+                                    allocate(character(len=1) :: lexeme)
+                                    lexeme = input(cursor:cursor)
+                                end if
+                            else if (.not. allocated(entrada_anterior)) then
+                                allocate(character(len(lexeme)+1) :: entrada_anterior)
+                                entrada_anterior = lexeme // input(cursor:cursor)
+                                deallocate(lexeme)
+                                allocate(character(len(entrada_anterior)) :: lexeme)
+                                lexeme = entrada_anterior            
+                            else
+                                deallocate(entrada_anterior)
+                                allocate(character(len(lexeme)+1) :: entrada_anterior)
+                                entrada_anterior = lexeme // input(cursor:cursor)
+                                deallocate(lexeme)
+                                allocate(character(len(entrada_anterior)) :: lexeme)
+                                lexeme = entrada_anterior       
+                            end if
+                            cursor = cursor + 1                  
+                        end do
+                        if(matchSomeInput .eqv. .FALSE.) then
+                            print *, "error lexico en col ", cursor, ', "'//input(cursor:cursor)//'"'
+                            lexeme = "ERROR"   
+                            cursor = cursor + 1; 
+                            return 
+                        else
+                            lexeme = lexeme // " - " // "${node.alias}"
+                            return
+                        end if 
+                    CASE ("+")
+                        matchSomeInput = .FALSE.
+                        do while(to_lower(input(cursor:cursor)) >= '${bot}' .and. to_lower(input(cursor:cursor)) <= '${top}')
+                            if (cursor > len(input)) then
+                                allocate( character(len=3) :: lexeme )
+                                lexeme = "EOF"
+                                return
+                            end if
+                            matchSomeInput = .TRUE.
+                            if (.not. allocated(lexeme)) then
+                                if(.not. allocated(entrada_anterior)) then 
+                                    allocate(character(len=1) :: lexeme)
+                                    lexeme = input(cursor:cursor)
+                                end if
+                            else if (.not. allocated(entrada_anterior)) then
+                                allocate(character(len(lexeme)+1) :: entrada_anterior)
+                                entrada_anterior = lexeme // input(cursor:cursor)
+                                deallocate(lexeme)
+                                allocate(character(len(entrada_anterior)) :: lexeme)
+                                lexeme = entrada_anterior            
+                            else
+                                deallocate(entrada_anterior)
+                                allocate(character(len(lexeme)+1) :: entrada_anterior)
+                                entrada_anterior = lexeme // input(cursor:cursor)
+                                deallocate(lexeme)
+                                allocate(character(len(entrada_anterior)) :: lexeme)
+                                lexeme = entrada_anterior       
+                            end if
+                            cursor = cursor + 1                 
+                        end do
+                        if(matchSomeInput .eqv. .FALSE.) then
+                            print *, "error lexico en col ", cursor, ', "'//input(cursor:cursor)//'"'
+                            lexeme = "ERROR"   
+                            cursor = cursor + 1; 
+                            return 
+                        else
+                            lexeme = lexeme // " - " // "${node.alias}"
+                            return
+                        end if 
+                    CASE DEFAULT
+                        if (to_lower(input(cursor:cursor)) >= '${bot}' .and. to_lower(input(cursor:cursor)) <= '${top}') then
+                            allocate(character(len=1) :: lexeme)  
+                            lexeme = input(cursor:cursor)        
+                            lexeme = lexeme // " - " // "${node.alias}"
+                            cursor = cursor + 1                  
+                            return
+                        end if
+                    END SELECT
+
+                     `;
+
+                }else{
+                    return  `
+
+                    SELECT CASE ("${qualifier}")
+                            CASE ("?")
+
+                        if (input(cursor:cursor) >= '${bot}' .and. input(cursor:cursor) <= '${top}') then
+                            allocate(character(len=1) :: lexeme)  
+                            lexeme = input(cursor:cursor)        
+                            lexeme = lexeme // " - " // "${node.alias}"
+                            cursor = cursor + 1                  
+                            return
+                        end if
+                    CASE ("*")
+                        matchSomeInput = .FALSE.
+                        do while(input(cursor:cursor) >= '${bot}' .and. input(cursor:cursor) <= '${top}')
+                            if (cursor > len(input)) then
+                                allocate( character(len=3) :: lexeme )
+                                lexeme = "EOF"
+                                return
+                            end if
+                            matchSomeInput = .TRUE.
+                            if (.not. allocated(lexeme)) then
+                                if(.not. allocated(entrada_anterior)) then 
+                                    allocate(character(len=1) :: lexeme)
+                                    lexeme = input(cursor:cursor)
+                                end if
+                            else if (.not. allocated(entrada_anterior)) then
+                                allocate(character(len(lexeme)+1) :: entrada_anterior)
+                                entrada_anterior = lexeme // input(cursor:cursor)
+                                deallocate(lexeme)
+                                allocate(character(len(entrada_anterior)) :: lexeme)
+                                lexeme = entrada_anterior            
+                            else
+                                deallocate(entrada_anterior)
+                                allocate(character(len(lexeme)+1) :: entrada_anterior)
+                                entrada_anterior = lexeme // input(cursor:cursor)
+                                deallocate(lexeme)
+                                allocate(character(len(entrada_anterior)) :: lexeme)
+                                lexeme = entrada_anterior       
+                            end if
+                            cursor = cursor + 1                  
+                        end do
+                        if(matchSomeInput .eqv. .FALSE.) then
+                            print *, "error lexico en col ", cursor, ', "'//input(cursor:cursor)//'"'
+                            lexeme = "ERROR"   
+                            cursor = cursor + 1; 
+                            return 
+                        else
+                            lexeme = lexeme // " - " // "${node.alias}"
+                            return
+                        end if 
+                    CASE ("+")
+                        matchSomeInput = .FALSE.
+                        do while(input(cursor:cursor) >= '${bot}' .and. input(cursor:cursor) <= '${top}')
+                            if (cursor > len(input)) then
+                                allocate( character(len=3) :: lexeme )
+                                lexeme = "EOF"
+                                return
+                            end if
+                            matchSomeInput = .TRUE.
+                            if (.not. allocated(lexeme)) then
+                                if(.not. allocated(entrada_anterior)) then 
+                                    allocate(character(len=1) :: lexeme)
+                                    lexeme = input(cursor:cursor)
+                                end if
+                            else if (.not. allocated(entrada_anterior)) then
+                                allocate(character(len(lexeme)+1) :: entrada_anterior)
+                                entrada_anterior = lexeme // input(cursor:cursor)
+                                deallocate(lexeme)
+                                allocate(character(len(entrada_anterior)) :: lexeme)
+                                lexeme = entrada_anterior            
+                            else
+                                deallocate(entrada_anterior)
+                                allocate(character(len(lexeme)+1) :: entrada_anterior)
+                                entrada_anterior = lexeme // input(cursor:cursor)
+                                deallocate(lexeme)
+                                allocate(character(len(entrada_anterior)) :: lexeme)
+                                lexeme = entrada_anterior       
+                            end if
+                            cursor = cursor + 1                 
+                        end do
+                        if(matchSomeInput .eqv. .FALSE.) then
+                            print *, "error lexico en col ", cursor, ', "'//input(cursor:cursor)//'"'
+                            lexeme = "ERROR"   
+                            cursor = cursor + 1; 
+                            return 
+                        else
+                            lexeme = lexeme // " - " // "${node.alias}"
+                            return
+                        end if 
+                    CASE DEFAULT
+                        if (input(cursor:cursor) >= '${bot}' .and. input(cursor:cursor) <= '${top}') then
+                            allocate(character(len=1) :: lexeme)  
+                            lexeme = input(cursor:cursor)        
+                            lexeme = lexeme // " - " // "${node.alias}"
+                            cursor = cursor + 1                  
+                            return
+                        end if
+                    END SELECT
+
+                     `;
+
+                }
+
+            }else{
+                if (node.exprs[0].expr.isCase == 'i') {
+                    // Comparación insensible a mayúsculas y minúsculas
+                    return `
+        if (to_lower(input(cursor:cursor)) >= '${bot}' .and. to_lower(input(cursor:cursor)) <= '${top}') then
+            allocate(character(len=1) :: lexeme)  ! Reservar espacio para el lexema
+            lexeme = input(cursor:cursor)        ! Asignar el carácter al lexema
+            lexeme = lexeme // " - " // "${node.alias}"
+            cursor = cursor + 1                  ! Avanzar el cursor
+            return
+        end if
+                    `;
+                } else {
+                    // Comparación sensible a mayúsculas y minúsculas
+                    return `
+        if (input(cursor:cursor) >= '${bot}' .and. input(cursor:cursor) <= '${top}') then
+            allocate(character(len=1) :: lexeme)  ! Reservar espacio para el lexema
+            lexeme = input(cursor:cursor)        ! Asignar el carácter al lexema
+            lexeme = lexeme // " - " // "${node.alias}"
+            cursor = cursor + 1                  ! Avanzar el cursor
+            return
+        end if
+                    `;
+                }
             }
+
+
+
+            
         }
 
     }
@@ -347,6 +796,7 @@ end module parser
 \tend if`;       
         return fortran;
     }
+
     visitExpresion(node) {
         return node.expr.accept(this);
     }   
