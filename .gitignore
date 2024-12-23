@@ -143,7 +143,7 @@ package-lock.json
 package.json
 
 #ignorar caperta tools
-toos/
+tools/
 
 #ignorar archivos sin uso momentaneo
 .editorconfig
